@@ -1,0 +1,38 @@
+name: Test Docker Image
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t pdf-to-text-test .
+
+      - name: Test Docker image - Check if container starts
+        run: |
+          docker run --name pdf-test -d -p 8000:8000 -e OLLAMA_SERVER_URL=http://example.com:11434 -e OLLAMA_MODEL=gemma3:4b pdf-to-text-test
+          sleep 5
+          if ! docker ps | grep pdf-test; then
+            echo "Container failed to start"
+            docker logs pdf-test
+            exit 1
+          fi
+          
+          # Check if the API is responding
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ | grep 200 || {
+            echo "API is not responding with 200 OK"
+            docker logs pdf-test
+            exit 1
+          }
+          
+          echo "Container started successfully and API is responding"
+          docker stop pdf-test 
