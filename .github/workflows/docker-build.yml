@@ -56,8 +56,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max ]
       - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
+        uses: docker/build-push-action@v4
+        with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: latest
